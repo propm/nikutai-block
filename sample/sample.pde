@@ -1,19 +1,19 @@
 float balx, baly, balvx, balvy;      //ボール
 float barx, bary, barw, barh;        //バー
-int bwn, bhn;                        //ブロックの個数
+int bwn, bhn, bw, bh;                //ブロックの個数
 int balr;
 
 class Block{
   int x, y;
   
   Block(int i, int j){
-    x = j*width/bwn;
-    y = i*(height/2)/bhn;
+    x = j*bw;
+    y = i*bh;
     println("x: "+x+" y: "+y);
   }
   
   void drawer(){
-    rect(x, y, width/bwn, (height/2)/bhn);
+    rect(x, y, bw, bh);
   }
 }
 
@@ -31,6 +31,8 @@ void setup(){
   balvx = 4;
   balvy = 4;
   balr = 20;
+  bw = width/bwn;
+  bh = (height/2)/bhn;
   
   blocks = new Block[bhn][bwn];
   
@@ -71,11 +73,29 @@ void dicision(){
   if(barx < barw/2)           barx = barw/2;
   if(barx > width - barw/2)   barx = width - barw/2;
   
+  //ボールが画面外に行かないように
+  if(balx < balr/2){
+    balx = balr/2;
+    balvx *= -1;
+  }
+  if(balx > width - balr/2){
+    balx = width - balr/2;
+    balvx *= -1;
+  }
+  if(baly < balr/2){
+    baly = balr/2;
+    balvy *= -1;
+  }
+  if(baly > height - balr/2){
+    baly = height - balr/2;
+    balvy *= -1;
+  }
+  
   //ボールとバーのあたり判定
   if(balx > barx - barw/2 && balx < barx + barw/2){
     if(baly > bary - barh/2){
       baly = bary - barh/2;
-      balvy = -balvy;
+      balvy *= -1;
     }
   }
 }
