@@ -1,19 +1,46 @@
-float balx, baly, balvx, balvy;      //ボール
-float barx, bary, barw, barh;        //バー
-int bwn, bhn, bw, bh;                //ブロックの個数
-int balr;
+float balx, baly, balvx, balvy;      //ボールの座標、速さ
+float barx, bary, barw, barh;        //バーの座標、幅
+int bwn, bhn, bw, bh;                //ブロックの個数、幅
+int balr;                            //ボールの直径
 
 class Block{
-  int x, y;
+  int x, y;            //左上の座標
+  boolean visible;     //表示・非表示
   
   Block(int i, int j){
     x = j*bw;
     y = i*bh;
-    println("x: "+x+" y: "+y);
+    visible = true;
   }
   
   void drawer(){
-    rect(x, y, bw, bh);
+    if(visible)  rect(x, y, bw, bh);
+  }
+  
+  /*  ブロックとボールのあたり判定
+   *  schange  今のループでまだボールの速さが反転されてないならtrue
+   */
+  boolean dicision(boolean schange){
+    boolean hflag = false;
+    boolean wflag = false;
+    if(visible){
+      if((x < balx - balr/2 && x + bw > balx - balr/2) ||
+          (x < balx + balr/2 && x + bw > balx + balr/2))     wflag = true;
+      if((y < baly - balr/2 && y + bh > baly - balr/2) || 
+          (y < baly + balr/2 && y + bh > baly + balr/2))     hflag = true;
+      if(wflag && hflag){
+        visible = false;
+        if(schange){
+          balvx *= -1;
+          balvy *= -1;
+        }
+        
+        println();
+        return false;
+      }
+    }
+    
+    return schange;
   }
 }
 
@@ -28,8 +55,8 @@ void setup(){
   bary = height/50*44;
   balx = width/2;
   baly = height/7*5;
-  balvx = 4;
-  balvy = 4;
+  balvx = 8;
+  balvy = 8;
   balr = 20;
   bw = width/bwn;
   bh = (height/2)/bhn;
@@ -45,6 +72,18 @@ void setup(){
 }
 
 void draw(){
+  barx = mouseX;
+  balx += balvx;
+  baly += balvy;
+  
+  dicision();
+  boolean change = true;
+  for(int i = 0; i < bhn; i++){
+    for(int j = 0; j < bwn; j++){
+      change = blocks[i][j].dicision(change);
+    }
+  }
+  
   background(255);
   
   fill(0, 250, 255);
@@ -54,12 +93,6 @@ void draw(){
       blocks[i][j].drawer();
     }
   }
-  
-  barx = mouseX;
-  balx += balvx;
-  baly += balvy;
-  
-  dicision();
   
   noStroke();
   fill(0, 255, 0);
@@ -86,15 +119,11 @@ void dicision(){
     baly = balr/2;
     balvy *= -1;
   }
-  if(baly > height - balr/2){
-    baly = height - balr/2;
-    balvy *= -1;
-  }
   
   //ボールとバーのあたり判定
   if(balx > barx - barw/2 && balx < barx + barw/2){
-    if(baly > bary - barh/2){
-      baly = bary - barh/2;
+    if(baly + balr/2 > bary - barh/2 && baly - balr/2 < bary + barh/2){
+      baly = bary - barh/2 - balr/2;
       balvy *= -1;
     }
   }
