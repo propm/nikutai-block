@@ -1,8 +1,8 @@
-float balx, baly, balvx, balvy;      //ボールの座標、速さ
-float barx, bary, barw, barh;        //バーの座標、幅
-int bwn, bhn, bw, bh;                //ブロックの個数、幅
-int balr;                            //ボールの直径
-boolean start;                       //trueならゲームスタート
+float balx, baly;                            //ボールの座標
+float barx, barbx, bary, barw, barh, barvx;  //バーの座標、ひとつ前のフレームの座標、幅、速度
+int bwn, bhn, bw, bh;                        //ブロックの個数、幅
+int balr;                                    //ボールの直径
+boolean start;                               //trueならゲームスタート
 
 class Block{
   int x, y;            //左上の座標
@@ -21,27 +21,44 @@ class Block{
   }
   
   //ブロックとボールのあたり判定
-  boolean dicision(){
-    boolean hflag = false;
-    boolean wflag = false;
+  boolean dicision(boolean schange){
+    
+    //ボールが上から来ていたならupflag = true
+    boolean upflag = false;
+    boolean downflag = false;
+    boolean leftflag = false;
+    boolean rightflag = false;
+    
     if(visible){
-      if((x < balx - balr/2 && x + bw > balx - balr/2) ||
-          (x < balx + balr/2 && x + bw > balx + balr/2))     wflag = true;
-      if((y < baly - balr/2 && y + bh > baly - balr/2) || 
-          (y < baly + balr/2 && y + bh > baly + balr/2))     hflag = true;
-      if(wflag && hflag){
+      if(x < balx - balr/2 && x + bw > balx - balr/2){
+        leftflag = true;
+      }
+      if(x < balx + balr/2 && x + bw > balx + balr/2){
+        rightflag = true;
+      }
+      if(y < baly - balr/2 && y + bh > baly - balr/2){
+        downflag = true;
+      }
+      if(y < baly + balr/2 && y + bh > baly + balr/2){
+        upflag = true;
+      }
+      if((upflag || downflag) && (leftflag || rightflag)){
         visible = false;
+        if(upflag && downflag)     balv.x *= -1;
+        if(leftflag && rightflag)  balv.y *= -1;
         
-        return true;
+        println("a");
+        
+        return false;
       }
     }
     
-    return false;
+    return true;
   }
 }
 
-Block[][] blocks;
-
+Block[][] blocks;      //ブロックの配列
+PVector balv;          //ボールの速度ベクトル
 
 void setup(){
   size(800, 800);
@@ -61,8 +78,8 @@ void init(){
   bary = height/50*44;
   balx = width/2;
   baly = height/7*5;
-  balvx = 8;
-  balvy = 8;
+  balv = new PVector(1, 3);
+  balv.setMag(14);
   balr = 20;
   bw = width/bwn;
   bh = (height/2)/bhn;
@@ -95,23 +112,23 @@ void process(){
   
   //座標移動
   barx = mouseX;
-  balx += balvx;
-  baly += balvy;
+  balx += balv.x;
+  baly += balv.y;
+  
+  barvx = barx - barbx;  //バーの速さを代入
 
   //各種あたり判定
+  //ボールとバー
   dicision();
-  boolean change = false;
+  
+  //ボールとブロック
+  boolean schange = true;
   for(int i = 0; i < bhn; i++){
     for(int j = 0; j < bwn; j++){
-      change = change || blocks[i][j].dicision();
+      schange = schange && blocks[i][j].dicision(schange);
     }
   }
-  
-  //ブロックに当たったらボールの速度を反転
-  if(change){
-    balvx *= -1;
-    balvy *= -1;
-  }
+  println(schange);
 }
 
 //描画用関数
@@ -143,22 +160,22 @@ void dicision(){
   //ボールが画面外に行かないように
   if(balx < balr/2){
     balx = balr/2;
-    balvx *= -1;
+    balv.x *= -1;
   }
   if(balx > width - balr/2){
     balx = width - balr/2;
-    balvx *= -1;
+    balv.x *= -1;
   }
   if(baly < balr/2){
     baly = balr/2;
-    balvy *= -1;
+    balv.y *= -1;
   }
   
   //ボールとバーのあたり判定
   if(balx > barx - barw/2 && balx < barx + barw/2){
     if(baly + balr/2 > bary - barh/2 && baly - balr/2 < bary + barh/2){
       baly = bary - barh/2 - balr/2;
-      balvy *= -1;
+      balv.y *= -1;
     }
   }
 }
