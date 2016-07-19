@@ -21,7 +21,7 @@ class Block{
   }
   
   //ブロックとボールのあたり判定
-  boolean dicision(boolean schange){
+  boolean dicision(){
     
     //ボールが上から来ていたならupflag = true
     boolean upflag = false;
@@ -31,10 +31,10 @@ class Block{
     
     if(visible){
       if(x < balx - balr/2 && x + bw > balx - balr/2){
-        leftflag = true;
+        rightflag = true;
       }
       if(x < balx + balr/2 && x + bw > balx + balr/2){
-        rightflag = true;
+        leftflag = true;
       }
       if(y < baly - balr/2 && y + bh > baly - balr/2){
         downflag = true;
@@ -44,8 +44,22 @@ class Block{
       }
       if((upflag || downflag) && (leftflag || rightflag)){
         visible = false;
+
         if(upflag && downflag)     balv.x *= -1;
         if(leftflag && rightflag)  balv.y *= -1;
+        
+        if(!(upflag && downflag) && !(leftflag && rightflag)){
+          if(upflag){
+            if(rightflag)    balv.x = abs(balv.x);
+            if(leftflag)     balv.x = abs(balv.x)*(-1);
+            balv.y = abs(balv.y)*(-1);
+          }
+          if(downflag){
+            if(rightflag)    balv.x = abs(balv.x);
+            if(leftflag)     balv.x = abs(balv.x)*(-1);
+            balv.y = abs(balv.y);
+          }
+        }
         
         println("a");
         
@@ -74,7 +88,7 @@ void init(){
   bhn = 8;
   barw = width/5;
   barh = height/50;
-  barx = width/2;
+  barx = barbx = width/2;
   bary = height/50*44;
   balx = width/2;
   baly = height/7*5;
@@ -110,12 +124,15 @@ void draw(){
 //処理用関数
 void process(){
   
+  //1フレーム前の座標を代入
+  barbx = barx;
+  
   //座標移動
   barx = mouseX;
   balx += balv.x;
   baly += balv.y;
   
-  barvx = barx - barbx;  //バーの速さを代入
+  barvx = barx - barbx;  //バーの速度を代入
 
   //各種あたり判定
   //ボールとバー
@@ -125,10 +142,11 @@ void process(){
   boolean schange = true;
   for(int i = 0; i < bhn; i++){
     for(int j = 0; j < bwn; j++){
-      schange = schange && blocks[i][j].dicision(schange);
+      schange = schange && blocks[i][j].dicision();
     }
   }
-  println(schange);
+  
+  println("balx: "+balx+" baly: "+baly);
 }
 
 //描画用関数
